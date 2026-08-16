@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Health">
+<meta name="theme-color" content="#14101d">
+<title>Health</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:#14101d;background-image:radial-gradient(120% 52% at 50% -6%,#241a38,#14101d 52%);color:#f2ecf7;font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+  /* ---------- AUTH SCREEN ---------- */
+  #authScreen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center}
+  #authScreen .logo{width:76px;height:76px;border-radius:22px;background:linear-gradient(135deg,#a97bf0,#7d54d4);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 18px 40px -12px rgba(125,84,212,.7);margin-bottom:22px}
+  #authScreen h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  #authScreen p{color:#9a8ab0;font-size:14px;margin-top:8px;max-width:280px;line-height:1.5}
+  #authScreen button{margin-top:28px;background:#fff;color:#1a1320;border:none;border-radius:14px;padding:14px 22px;font-size:15px;font-weight:700;font-family:inherit;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 10px 26px -10px rgba(0,0,0,.6)}
+  #authScreen button:active{transform:scale(.98)}
+  #authScreen .ms{width:18px;height:18px;display:grid;grid-template-columns:1fr 1fr;gap:2px}
+  #authScreen .ms i{display:block}
+  #authError{color:#f2799a;font-size:13px;margin-top:16px;min-height:18px}
+
+  /* ---------- APP ---------- */
+  #app{position:fixed;inset:0;display:none;flex-direction:column}
+  .sb{height:env(safe-area-inset-top,0);min-height:8px;flex:0 0 auto}
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:40px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+
+  .hd{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 0}
+  .hd h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .hd .date{font-family:'Space Grotesk';font-size:12px;color:#8f7ea8}
+  .refresh{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(169,123,240,.16);color:#cbb8e6;cursor:pointer;user-select:none}
+  .refresh.spin{animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .daywrap{margin-top:12px}
+  .daystrip{display:flex;gap:7px;overflow-x:auto;padding:0 18px 3px;scrollbar-width:none}
+  .daystrip::-webkit-scrollbar{display:none}
+  .day{flex:0 0 auto;width:45px;padding:7px 0;border-radius:14px;text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);cursor:pointer}
+  .day .dw{font-family:'Space Grotesk';font-size:9.5px;color:#8f7ea8;text-transform:uppercase;letter-spacing:.04em}
+  .day .dn{font-family:'Space Grotesk';font-size:16px;font-weight:700;margin-top:2px;color:#cbb8e6}
+  .day.sel{background:linear-gradient(135deg,#a97bf0,#7d54d4);border-color:transparent}
+  .day.sel .dw{color:#e9ddff}.day.sel .dn{color:#fff}
+  .swipehint{font-family:'Space Grotesk';font-size:10px;color:#6f6386;text-align:center;margin-top:5px}
+
+  .arc{display:flex;justify-content:center;position:relative;margin-top:6px}
+  .cap{position:absolute;bottom:6px;left:0;right:0;text-align:center}
+  .cap .big{font-family:'Space Grotesk';font-size:46px;font-weight:700;letter-spacing:-.04em;line-height:1}
+  .cap .big small{font-size:17px;color:#9a8ab0}
+  .cap .sub{font-size:12px;color:#9a8ab0;font-weight:600;margin-top:3px}
+  .cap .sub b{color:#37d68a}
+  .gends{display:flex;justify-content:space-between;max-width:250px;margin:2px auto 0;font-family:'Space Grotesk';font-size:10.5px;color:#6f6386}
+
+  .rings{display:flex;gap:6px;margin:12px 18px 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+  .rc{flex:1;text-align:center}
+  .rc .lbl{font-size:11px;color:#c3b8d6;font-weight:600;margin-top:3px}
+  .rc .tg{font-family:'Space Grotesk';font-size:10.5px;font-weight:600;margin-top:1px}
+
+  .alc{margin:16px 18px 0;background:rgba(242,178,99,.09);border:1px solid rgba(242,178,99,.22);border-radius:15px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between}
+  .alc .k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f2b263}
+  .alc .big{font-family:'Space Grotesk';font-size:22px;font-weight:700;margin-top:1px}
+  .alc .big small{font-size:12px;color:#b99a6f}
+  .alc .sx{font-size:10px;color:#c8955a;font-weight:600}
+  .dots{display:flex;gap:5px}.dots span{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(242,178,99,.5)}.dots span.on{background:#f2b263;border-color:#f2b263}
+
+  .log{margin:16px 18px 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+  .log .lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .log .lh .t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8f7ea8}
+  .log .lh .c{font-family:'Space Grotesk';font-size:10px;color:#6f6386}
+  .colhead,.lrow{display:grid;grid-template-columns:1fr 44px 42px 42px;align-items:center}
+  .colhead{padding:0 4px 7px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:4px}
+  .colhead span{font-family:'Space Grotesk';font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:#6f6386;text-align:right}
+  .colhead span:first-child{text-align:left}
+  .lrow{padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.05)}
+  .lrow .food{display:flex;align-items:center;gap:10px;min-width:0}
+  .lrow .food>div:last-child{min-width:0;flex:1}
+  .lrow .ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 34px;background:rgba(255,255,255,.05)}
+  .lrow .nm{font-size:14px;font-weight:700;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lrow .tm{font-family:'Space Grotesk';font-size:11px;color:#8f7ea8;margin-top:1px}
+  .lrow .cal{text-align:right;font-family:'Space Grotesk';font-size:17px;font-weight:700;letter-spacing:-.02em}
+  .lrow .p,.lrow .f{text-align:right;font-family:'Space Grotesk';font-size:13px;font-weight:600}
+  .lrow .p{color:#c3aef0}.lrow .f{color:#f2b263}
+  .lrow .p.z,.lrow .f.z{color:#5b5470}
+  .ltot{display:grid;grid-template-columns:1fr 44px 42px 42px;align-items:center;padding:11px 4px 0;margin-top:2px}
+  .ltot .lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#cbb8e6}
+  .ltot .v{text-align:right;font-family:'Space Grotesk';font-weight:700}
+  .ltot .v.cal{font-size:17px}.ltot .v.mac{font-size:13px}
+  .logempty{text-align:center;color:#6f6386;font-size:13px;padding:22px 0}
+
+  .wt{margin:16px 18px 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+  .wt .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .wt .l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8f7ea8}
+  .wt .cur b{font-family:'Space Grotesk';font-size:20px;font-weight:800}.wt .cur small{color:#8f7ea8;font-size:11px}
+
+  .foot{text-align:center;font-family:'Space Grotesk';font-size:10.5px;color:#6f6386;padding:16px 0 8px}
+  .foot b{color:#37d68a;font-weight:600}
+  .foot .so{color:#8f7ea8;text-decoration:underline;cursor:pointer;margin-left:8px}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH ============ -->
+<div id="authScreen">
+  <div class="logo">🌿</div>
+  <h1>Health</h1>
+  <p>Sign in with your Microsoft account to load your day.</p>
+  <button onclick="login()">
+    <span class="ms"><i style="background:#f25022"></i><i style="background:#7fba00"></i><i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span>
+    Sign in with Microsoft
+  </button>
+  <div id="authError"></div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div class="sb"></div>
+  <div class="scroll" id="scroll">
+    <div class="hd"><h1 id="dayTitle">Today</h1><div style="display:flex;align-items:center;gap:9px"><span class="date" id="dayDate">—</span><div class="refresh" id="refreshBtn" onclick="doRefresh()">↻</div></div></div>
+
+    <div class="daywrap"><div class="daystrip" id="daystrip"></div>
+      <div class="swipehint">‹ swipe to review earlier days</div></div>
+
+    <div class="arc">
+      <svg width="300" height="172" viewBox="0 0 300 172">
+        <path d="M20 158 A130 130 0 0 1 280 158" fill="none" stroke="#241a38" stroke-width="20" stroke-linecap="round"/>
+        <path id="calArc" d="M20 158 A130 130 0 0 1 280 158" fill="none" stroke="#37d68a" stroke-width="20" stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408" style="transition:stroke-dashoffset .5s ease"/>
+      </svg>
+      <div class="cap"><div class="big"><span id="calLeft">0</span><small id="calLeftUnit"> left</small></div><div class="sub"><b id="calEaten">0</b> of <span id="calTarget">1,700</span> cal</div></div>
+    </div>
+    <div class="gends"><span>0</span><span>Calories</span><span id="calTarget2">1,700</span></div>
+
+    <div class="rings">
+      <div class="rc"><svg width="82" height="82" viewBox="0 0 98 98"><g transform="rotate(-90 49 49)"><circle cx="49" cy="49" r="40" fill="none" stroke="#2e2440" stroke-width="9"/><circle id="rProt" cx="49" cy="49" r="40" fill="none" stroke="#a97bf0" stroke-width="9" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" style="transition:stroke-dashoffset .5s ease"/></g><text id="tProt" x="49" y="46" text-anchor="middle" fill="#fff" font-family="Space Grotesk" font-size="19" font-weight="700">0</text><text x="49" y="61" text-anchor="middle" fill="#8f7ea8" font-family="Space Grotesk" font-size="9">/100g</text></svg><div class="lbl">Protein</div><div class="tg" id="gProt" style="color:#a97bf0">100g to go</div></div>
+      <div class="rc"><svg width="82" height="82" viewBox="0 0 98 98"><g transform="rotate(-90 49 49)"><circle cx="49" cy="49" r="40" fill="none" stroke="#3a2a1c" stroke-width="9"/><circle id="rFib" cx="49" cy="49" r="40" fill="none" stroke="#f2b263" stroke-width="9" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" style="transition:stroke-dashoffset .5s ease"/></g><text id="tFib" x="49" y="46" text-anchor="middle" fill="#fff" font-family="Space Grotesk" font-size="19" font-weight="700">0</text><text x="49" y="61" text-anchor="middle" fill="#8f7ea8" font-family="Space Grotesk" font-size="9">/30g</text></svg><div class="lbl">Fiber</div><div class="tg" id="gFib" style="color:#f2b263">30g to go</div></div>
+      <div class="rc"><svg width="82" height="82" viewBox="0 0 98 98"><g transform="rotate(-90 49 49)"><circle cx="49" cy="49" r="40" fill="none" stroke="#1c2f3f" stroke-width="9"/><circle id="rWat" cx="49" cy="49" r="40" fill="none" stroke="#4aa3e0" stroke-width="9" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" style="transition:stroke-dashoffset .5s ease"/></g><text id="tWat" x="49" y="46" text-anchor="middle" fill="#fff" font-family="Space Grotesk" font-size="19" font-weight="700">0</text><text x="49" y="61" text-anchor="middle" fill="#8f7ea8" font-family="Space Grotesk" font-size="9">/90oz</text></svg><div class="lbl">Water</div><div class="tg" id="gWat" style="color:#4aa3e0">90oz to go</div></div>
+    </div>
+
+    <div class="alc"><div><div class="k">Alcohol</div><div class="big"><span id="alcN">0</span> <small id="alcU">drinks today</small></div><div class="sx" id="alcSx">Dry stretch · set Aug 15</div></div><div class="dots" id="alcDots"></div></div>
+
+    <div class="log">
+      <div class="lh"><span class="t">Log</span><span class="c" id="logCount">0 entries</span></div>
+      <div class="colhead"><span>Item</span><span>Cal</span><span>Prot</span><span>Fiber</span></div>
+      <div id="logRows"></div>
+      <div class="ltot" id="logTot" style="display:none">
+        <div class="lbl">Total</div>
+        <div class="v cal" style="color:#37d68a" id="totCal">0</div>
+        <div class="v mac" style="color:#c3aef0" id="totProt">0g</div>
+        <div class="v mac" style="color:#f2b263" id="totFib">0g</div>
+      </div>
+    </div>
+
+    <div class="wt"><div class="top"><span class="l">Weight trend</span><span class="cur"><b id="wCur">—</b> <small>lb → 175</small></span></div>
+      <svg width="100%" height="48" viewBox="0 0 330 48" preserveAspectRatio="none"><defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#37d68a" stop-opacity=".28"/><stop offset="1" stop-color="#37d68a" stop-opacity="0"/></linearGradient></defs><path id="wFill" d="" fill="url(#wg)"/><polyline id="wLine" points="" fill="none" stroke="#37d68a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle id="wDot" r="4" fill="#37d68a" style="display:none"/></svg>
+    </div>
+
+    <div class="foot"><span id="syncTxt">not synced</span><span class="so" onclick="signOut()">sign out</span></div>
+  </div>
+</div>
+
+<script>
+/* =================== CONFIG (Health App registration) =================== */
+const CONFIG={CLIENT_ID:'e288a478-4d2c-4bac-9a88-dde34b85250a',TENANT:'0ae860f2-b1e0-4222-b0e1-37314eddf4df',SCOPES:'Files.ReadWrite offline_access'};
+const REDIRECT_URI=location.origin+location.pathname;
+const FP=d=>`/me/drive/root:/0 - Data/AI/Life OS/Health/food-log/${d}.md:/content`;
+const TARGETS={cal:1700,protein:100,fiber:30,water:90,weightTarget:175};
+
+/* =================== STATE =================== */
+let accessToken=null, viewedDate=new Date(), dayCache={};
+
+/* =================== PKCE AUTH (mirrors journal-app) =================== */
+function b64u(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
+async function genPKCE(){const v=b64u(crypto.getRandomValues(new Uint8Array(32)));const c=b64u(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));return{verifier:v,challenge:c};}
+async function login(){const{verifier,challenge}=await genPKCE();const state=b64u(crypto.getRandomValues(new Uint8Array(16)));localStorage.setItem('h_pkv',verifier);localStorage.setItem('h_pks',state);const p=new URLSearchParams({client_id:CONFIG.CLIENT_ID,response_type:'code',redirect_uri:REDIRECT_URI,scope:CONFIG.SCOPES,code_challenge:challenge,code_challenge_method:'S256',state});location.href=`https://login.microsoftonline.com/${CONFIG.TENANT}/oauth2/v2.0/authorize?${p}`;}
+async function exchangeCode(code,rs){const v=localStorage.getItem('h_pkv');const ss=localStorage.getItem('h_pks');if(!v)return false;if(ss&&rs&&ss!==rs)return false;try{const res=await fetch(`https://login.microsoftonline.com/${CONFIG.TENANT}/oauth2/v2.0/token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:CONFIG.CLIENT_ID,grant_type:'authorization_code',code,redirect_uri:REDIRECT_URI,code_verifier:v})});const d=await res.json();if(d.access_token){accessToken=d.access_token;localStorage.setItem('h_tok',accessToken);if(d.refresh_token)localStorage.setItem('h_ref',d.refresh_token);localStorage.removeItem('h_pkv');localStorage.removeItem('h_pks');history.replaceState({},'',location.pathname);return true;}return false;}catch(e){return false;}}
+async function refreshToken(){const rt=localStorage.getItem('h_ref');if(!rt)return false;try{const res=await fetch(`https://login.microsoftonline.com/${CONFIG.TENANT}/oauth2/v2.0/token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:CONFIG.CLIENT_ID,grant_type:'refresh_token',refresh_token:rt,scope:CONFIG.SCOPES})});const d=await res.json();if(d.access_token){accessToken=d.access_token;localStorage.setItem('h_tok',accessToken);if(d.refresh_token)localStorage.setItem('h_ref',d.refresh_token);return true;}return false;}catch(e){return false;}}
+function signOut(){accessToken=null;localStorage.removeItem('h_tok');localStorage.removeItem('h_ref');showAuth();}
+
+/* =================== GRAPH =================== */
+async function gF(url,opts={}){const tok=accessToken||localStorage.getItem('h_tok');if(!tok){showAuth();return null;}if(!accessToken)accessToken=tok;const res=await fetch('https://graph.microsoft.com/v1.0'+url,{...opts,headers:{Authorization:'Bearer '+accessToken,...(opts.headers||{})}});if(res.status===401){const ok=await refreshToken();if(ok)return gF(url,opts);signOut();return null;}return res;}
+
+/* =================== DATA =================== */
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+function parseDay(text){
+  const day={entries:[],vitals:{},targets:{}}; let sec=null;
+  (text||'').split('\n').forEach(raw=>{
+    const line=raw.trim();
+    if(line.startsWith('## ')){sec=line.slice(3).toLowerCase().trim();return;}
+    if(!line.startsWith('- '))return;
+    const c=line.slice(2);
+    if(sec==='entries'){
+      const parts=c.split('|').map(s=>s.trim());
+      if(parts.length>=2)day.entries.push({time:parts[0]||'',name:parts[1]||'',cal:+parts[2]||0,protein:+parts[3]||0,fiber:+parts[4]||0,tag:(parts[5]||'').toLowerCase()});
+    }else if(sec==='vitals'||sec==='targets'){
+      const i=c.indexOf(':');if(i<0)return;const k=c.slice(0,i).trim().toLowerCase();const v=c.slice(i+1).trim();
+      (sec==='vitals'?day.vitals:day.targets)[k]=v;
+    }
+  });
+  return day;
+}
+async function loadDay(ds){
+  if(ds in dayCache)return dayCache[ds];
+  const res=await gF(FP(ds));
+  if(!res||res.status===404){dayCache[ds]=parseDay('');return dayCache[ds];}
+  if(!res.ok){dayCache[ds]=parseDay('');return dayCache[ds];}
+  const t=await res.text();dayCache[ds]=parseDay(t);return dayCache[ds];
+}
+
+/* =================== RENDER =================== */
+const fmt=n=>n.toLocaleString('en-US');
+function iconFor(name){const n=name.toLowerCase();const m=[['beer','🍺'],['wine','🍷'],['cocktail','🍸'],['coke','🥤'],['soda','🥤'],['coffee','☕'],['water','💧'],['croissant','🥐'],['bread','🥖'],['toast','🍞'],['egg','🥚'],['salami','🥩'],['steak','🥩'],['chicken','🍗'],['salad','🥗'],['apple','🍎'],['banana','🍌'],['pizza','🍕'],['burger','🍔'],['rice','🍚'],['pasta','🍝'],['cheese','🧀'],['yogurt','🥣'],['shake','🥛'],['protein','🥛'],['nuts','🥜'],['chip','🍟'],['cookie','🍪'],['ice','🍦'],['fish','🐟']];for(const[k,e]of m)if(n.includes(k))return e;return '🍽️';}
+function to12(t){const m=/^(\d{1,2}):(\d{2})/.exec(t);if(!m)return t;let h=+m[1];const ap=h>=12?'p':'a';h=h%12||12;return `${h}:${m[2]}${ap}`;}
+function setArc(id,pct,len){document.getElementById(id).setAttribute('stroke-dashoffset',(len*(1-Math.min(pct,1))).toFixed(1));}
+
+function renderDay(ds,day){
+  const t={cal:+day.targets['calories']||TARGETS.cal,protein:+day.targets['protein']||TARGETS.protein,fiber:+day.targets['fiber']||TARGETS.fiber,water:+day.targets['water']||TARGETS.water};
+  let cal=0,prot=0,fib=0,alc=0;
+  day.entries.forEach(e=>{cal+=e.cal;prot+=e.protein;fib+=e.fiber;if(e.tag==='alcohol')alc++;});
+  const water=+day.vitals['water_oz']||0;
+  const left=t.cal-cal;
+  // header
+  const dObj=new Date(ds+'T12:00:00');
+  const isToday=ds===iso(new Date());
+  document.getElementById('dayTitle').textContent=isToday?'Today':dObj.toLocaleDateString('en-US',{weekday:'long'});
+  document.getElementById('dayDate').textContent=dObj.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  // calorie arc
+  document.getElementById('calLeft').textContent=fmt(Math.abs(left));
+  document.getElementById('calLeftUnit').textContent=left<0?' over':' left';
+  document.getElementById('calArc').setAttribute('stroke',left<0?'#f2799a':'#37d68a');
+  document.getElementById('calEaten').textContent=fmt(cal);
+  document.getElementById('calTarget').textContent=fmt(t.cal);
+  document.getElementById('calTarget2').textContent=fmt(t.cal);
+  setArc('calArc',cal/t.cal,408);
+  // rings
+  document.getElementById('tProt').textContent=prot; setArc('rProt',prot/t.protein,251); document.getElementById('gProt').textContent=Math.max(t.protein-prot,0)+'g to go';
+  document.getElementById('tFib').textContent=fib; setArc('rFib',fib/t.fiber,251); document.getElementById('gFib').textContent=Math.max(t.fiber-fib,0)+'g to go';
+  document.getElementById('tWat').textContent=water; setArc('rWat',water/t.water,251); document.getElementById('gWat').textContent=Math.max(t.water-water,0)+'oz to go';
+  // alcohol
+  document.getElementById('alcN').textContent=alc;
+  document.getElementById('alcU').textContent=alc===1?'drink':'drinks';
+  document.getElementById('alcSx').textContent=alc>0?'⚠ Dry stretch broken':'✓ Dry — nice';
+  let dots='';for(let i=0;i<3;i++)dots+=`<span class="${i<alc?'on':''}"></span>`;
+  document.getElementById('alcDots').innerHTML=dots;
+  // log
+  const rows=document.getElementById('logRows');
+  document.getElementById('logCount').textContent=day.entries.length+(day.entries.length===1?' entry':' entries');
+  if(!day.entries.length){rows.innerHTML='<div class="logempty">Nothing logged'+(isToday?' yet — tell me in chat and hit ↻':'')+'.</div>';document.getElementById('logTot').style.display='none';}
+  else{
+    rows.innerHTML=day.entries.map(e=>`<div class="lrow"><div class="food"><div class="ico">${iconFor(e.name)}</div><div><div class="nm">${esc(e.name)}</div><div class="tm">${esc(to12(e.time))}</div></div></div><div class="cal">${e.cal}</div><div class="p${e.protein?'':' z'}">${e.protein}g</div><div class="f${e.fiber?'':' z'}">${e.fiber}g</div></div>`).join('');
+    document.getElementById('logTot').style.display='grid';
+    document.getElementById('totCal').textContent=fmt(cal);
+    document.getElementById('totProt').textContent=prot+'g';
+    document.getElementById('totFib').textContent=fib+'g';
+  }
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function renderWeight(){
+  // gather last 21 days of weight from cached/loaded days
+  const pts=[];const today=new Date(viewedDate);
+  for(let i=20;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const ds=iso(d);const day=dayCache[ds];if(day&&day.vitals['weight'])pts.push(+day.vitals['weight']);}
+  const cur=(dayCache[iso(viewedDate)]||{vitals:{}}).vitals['weight'];
+  document.getElementById('wCur').textContent=cur?cur:'—';
+  const line=document.getElementById('wLine'),fill=document.getElementById('wFill'),dot=document.getElementById('wDot');
+  if(pts.length<2){line.setAttribute('points','');fill.setAttribute('d','');dot.style.display='none';return;}
+  const min=Math.min(...pts,TARGETS.weightTarget),max=Math.max(...pts);const rng=(max-min)||1;const W=330,H=44;
+  const xy=pts.map((v,i)=>{const x=6+i*((W-12)/(pts.length-1));const y=4+(1-(v-min)/rng)*(H-8);return[x,y];});
+  line.setAttribute('points',xy.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '));
+  fill.setAttribute('d',`M${xy[0][0].toFixed(1)},${xy[0][1].toFixed(1)} `+xy.slice(1).map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ')+` L${xy[xy.length-1][0].toFixed(1)},48 L${xy[0][0].toFixed(1)},48 Z`);
+  const last=xy[xy.length-1];dot.setAttribute('cx',last[0].toFixed(1));dot.setAttribute('cy',last[1].toFixed(1));dot.style.display='';
+}
+
+function buildStrip(){
+  const strip=document.getElementById('daystrip');const today=new Date();const sel=iso(viewedDate);
+  let html='';
+  for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const ds=iso(d);
+    html+=`<div class="day${ds===sel?' sel':''}" onclick="goDay('${ds}')"><div class="dw">${d.toLocaleDateString('en-US',{weekday:'short'})}</div><div class="dn">${d.getDate()}</div></div>`;}
+  strip.innerHTML=html;
+}
+
+/* =================== FLOW =================== */
+async function loadAndRender(){
+  const ds=iso(viewedDate);
+  buildStrip();
+  const day=await loadDay(ds);
+  renderDay(ds,day);
+  // preload trailing days for weight trend (non-blocking-ish)
+  const today=new Date(viewedDate);
+  for(let i=1;i<=20;i++){const d=new Date(today);d.setDate(d.getDate()-i);const k=iso(d);if(!(k in dayCache)){loadDay(k).then(()=>renderWeight()).catch(()=>{});}}
+  renderWeight();
+  document.getElementById('syncTxt').innerHTML='↻ Synced <b>'+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'</b>';
+}
+function goDay(ds){viewedDate=new Date(ds+'T12:00:00');loadAndRender();document.getElementById('scroll').scrollTop=0;}
+function shiftDay(n){const d=new Date(viewedDate);d.setDate(d.getDate()+n);const today=new Date();today.setHours(23,59,59);if(d>today)return;viewedDate=d;loadAndRender();}
+async function doRefresh(){const b=document.getElementById('refreshBtn');b.classList.add('spin');delete dayCache[iso(viewedDate)];await loadAndRender();setTimeout(()=>b.classList.remove('spin'),500);}
+
+/* swipe: horizontal-dominant gesture changes day */
+let tx=0,ty=0;
+document.getElementById('app').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.getElementById('app').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.8){shiftDay(dx>0?-1:1);}},{passive:true});
+
+function showAuth(){document.getElementById('authScreen').style.display='flex';document.getElementById('app').style.display='none';}
+function showApp(){document.getElementById('authScreen').style.display='none';document.getElementById('app').style.display='flex';}
+
+async function init(){
+  const params=new URLSearchParams(location.search);const code=params.get('code');const state=params.get('state');
+  if(code){const ok=await exchangeCode(code,state);if(!ok){showAuth();document.getElementById('authError').textContent='Sign-in failed. Please try again.';return;}}
+  accessToken=localStorage.getItem('h_tok');
+  if(!accessToken){showAuth();return;}
+  await refreshToken().catch(()=>{});
+  showApp();
+  await loadAndRender();
+}
+init();
+</script>
+</body>
+</html>
